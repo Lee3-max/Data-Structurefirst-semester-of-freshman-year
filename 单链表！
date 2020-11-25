@@ -1,0 +1,265 @@
+#include<stdlib.h>//为了用动态分配内存
+#include<stdio.h>
+void ScanList();//声明遍历
+void AddListTail(int a);//声明尾添加
+void AddListHead(int a);//声明头添加
+void FreeList();//清空链表
+struct Node* FindList(int a);//查找
+void AddListRand(int index,int a);//任意位置添加
+void DeleteListHead();//头删除
+void DeleteListTail();//尾删除
+void DeleteListRand(int a);//删除任意节点
+//(还差头删除，尾删除，删除指定节点）
+//栈 头添加+头删除
+//队列 头添加+尾删除  尾添加+头删除
+//下面创建一个节点
+struct Node
+{
+    int A;//数据域：结构体成员
+    struct Node*pNext;//指针域指向下一个结构体指针
+};
+
+//下面定义头指针和尾指针
+struct Node*g_pHead=NULL;
+struct Node*g_pend=NULL;
+
+//创建链表or在链表中加一个数据
+void AddListTail(int a)//参数为数据域的数据
+{
+    //尾添加：添加在尾部
+    //下面开辟一块内存空间，来创建一个节点
+    //记得强制类型转换
+    struct Node*ptemp=(struct Node*)malloc(sizeof(struct Node));//开辟一块节点那么大的内存空间
+    ptemp->A=a;//结构体指针指向A,赋值为传进来的参数
+    ptemp->pNext=NULL;//结构体指针指向指针域，暂且定为NULL
+
+    //下面将两个节点链接起来
+    if(NULL==g_pend||NULL==g_pHead)//如果头尾指针有一个是空，即创建的节点是第一个节点
+    {
+        //那么头尾指向同一个节点
+        g_pHead=ptemp;
+        g_pend=ptemp;
+    }
+    else
+    {
+        g_pend->pNext=ptemp;//结构体指针尾节点指向下一个结构体指针的首地址，即新开辟出来的地址
+        g_pend=ptemp;//尾指针指向最后一个节点
+    }
+}
+void AddListHead(int a)
+{
+    //开辟内存空间，创建一个节点
+    struct Node *ptemp=(struct Node*)malloc(sizeof(struct Node));
+
+    //节点数据赋值
+    ptemp->A=a;
+    ptemp->pNext=NULL;
+
+    //链接在链表上
+    if(NULL==g_pHead)
+    {
+        g_pHead=ptemp;//头和尾都指向新的结构体指针
+        g_pend=ptemp;
+    }
+    else
+    {
+        ptemp->pNext=g_pHead;
+        g_pHead=ptemp;//头节点地址改为了新的地址
+    }
+}
+
+//遍历链表(查一个）or（查指定的）
+void ScanList()
+{
+    struct Node *ptemp=g_pHead;//中间指针记住指针的头，因为头是链表的首地址
+    while(ptemp!=NULL)//当结构体指针不指向最后一个（NULL)的时候：
+    {
+        printf("%d\n",ptemp->A);//打印指向的数据
+        ptemp=ptemp->pNext;//指针指向下一个
+    }
+}
+
+//查询指定的节点
+struct Node* FindList(int a)
+{
+    struct Node *ptemp=g_pHead;//中间指针记住指针的头，因为头是链表的首地址
+    while(ptemp!=NULL)//当结构体指针不指向最后一个（NULL)的时候：
+    {
+        if(a==ptemp->A)
+        {
+            return ptemp;//如果找到了就返回这个节点
+        }
+        ptemp=ptemp->pNext;//指针指向下一个
+    }
+    return NULL;//如果没有找到就返回空
+}
+
+//清空链表
+void FreeList()
+{
+    struct Node*ptemp=g_pHead;
+    while(ptemp!=NULL)
+    //内部逻辑：ptemp往前中走着，pt总是慢一步，随即死掉，但是总是产生新的
+    {struct Node*pt=ptemp;//结构体指针pt记住之前的
+        ptemp=ptemp->pNext;//ptemp指向下一个
+        free(pt);//释放前一个
+    }
+    //头尾清空
+    g_pHead=NULL;
+    g_pend=NULL;
+}
+
+//指定位置插入节点
+void AddListRand(int index,int a)
+{
+    if(NULL==g_pHead)
+    {
+        printf("No Node!!\n");
+        return;
+    }
+    //找位置
+    struct Node*pt=FindList(index);//寻找节点位置，并且返回一个结构体指针
+    if(NULL==pt)//如果找不到那个位置的话，findlist会返回一个NULL
+    {
+        printf("NO NODE YOU LIKED\n");
+        return;
+    }
+
+    //下面就是有此节点的情况了
+    struct Node*ptemp=(struct Node*)malloc(sizeof(struct Node));//创建一个新的节点
+
+    //对节点成员进行赋值
+    ptemp->A=a;
+    ptemp->pNext=NULL;
+
+    //链接到链表上
+    if(pt==g_pend)//如果找到了，发现是尾节点
+    {
+        g_pend->pNext=ptemp;//尾节点改为新的节点
+        g_pend=ptemp;
+    }
+    else
+    {
+        //先连
+        ptemp->pNext=pt->pNext;
+        //后断
+        pt->pNext=ptemp;
+    }
+}
+
+//头删除
+void DeleteListHead()
+{
+    if(NULL==g_pHead)//链表检测
+    {
+        printf("You shouldn't free the head\n");
+        return;
+    }
+    //定义一个新的指针ptemp，记住旧的头
+    struct Node*ptemp=g_pHead;//新指针指向旧的头
+    //头的下一个节点变成新的头
+    g_pHead=g_pHead->pNext;
+    //释放旧的头
+    free(ptemp);
+}
+
+//尾删除
+void DeleteListTail()
+{
+    //链表检测
+    if(NULL==g_pHead)
+    {
+        printf("You needn't to free it!\n");
+        return;
+    }
+    //链表不为空
+    //链表有1个节点
+    if(g_pHead==g_pend)//如果只有一个节点的时候，将头尾赋为空
+    {
+        free(g_pHead);
+        g_pHead=NULL;
+        g_pend=NULL;
+    }
+    else
+    {
+        //找到尾巴前一个结点
+        struct Node*ptemp=g_pHead;//准备遍历链表，装头
+        while(ptemp->pNext!=g_pend)//当下一个不是g_end的时候
+        {
+            ptemp=ptemp->pNext;//此时ptemp指向下一个
+        }
+        //找到了，开始进行删除尾巴
+        free(g_pend);
+
+        //尾巴迁移
+        g_pend=ptemp;
+
+        //尾的下一个指针赋值NULL
+        g_pend->pNext=NULL;
+    }
+}
+
+//删除指定节点
+void DeleteListRand(int a)
+{
+    //链表判断
+    if(NULL==g_pHead)
+    {
+        printf("You needn't free it!\n");
+        return;
+    }
+
+    //链表有东西，找这个节点
+    struct Node*ptemp=FindList(a);//调用查找函数
+    if(NULL==ptemp)//如果不存在该节点
+    {
+        printf("NO!\n");
+        return;
+    }
+    //找到了
+    if(g_pHead==g_pend)
+    {
+        free(g_pHead);
+        g_pHead=NULL;
+        g_pend=NULL;
+    }
+    else if(g_pHead->pNext==g_pend)//有两个节点
+    {
+        if(g_pHead==ptemp)
+        {
+            DeleteListHead();
+        }
+        else
+        {
+            DeleteListTail();
+        }
+
+    }
+    else//有多个节点
+    {
+        if(g_pHead==ptemp)
+        {
+            DeleteListHead();
+        }
+        else if(g_pend==ptemp)
+        {
+            DeleteListTail();
+        }
+        else
+        {
+            //找删除节点前的一个节点
+            struct Node*pt=g_pend;
+            while(pt->pNext!=ptemp)
+            {
+                pt=pt->pNext;
+            }
+            //找到了
+            //链接
+            pt->pNext=ptemp->pNext;
+
+            //释放
+            free(ptemp);
+        }
+
+    }
+}
